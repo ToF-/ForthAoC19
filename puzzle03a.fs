@@ -135,7 +135,47 @@ CREATE LINES-B PUZZLE-B-WIRE-SIZE @ LINES ALLOT
     ELSE 2R> NIP SWAP ( row+dist,col )
     THEN THEN THEN ;
 
+VARIABLE WIRE-SRCE
+VARIABLE LINE-DEST
+: WIRE-LINES ( srce,dest,size )
+    -ROT LINE-DEST ! WIRE-SRCE !
+    0 0 ROT             ( row,col,size )
+    0 DO                ( row,col )
+        WIRE-SRCE @ @   ( row,col,wire )
+        WIRE-LINE       ( dir,pos,p0,pN )
+        2OVER           ( dir,pos,p0,pN,dir,pos )
+        LINE-DEST @ 2!  ( dir,pos,p0,pN )
+        2 CELLS LINE-DEST +!
+        2DUP            ( dir,pos,p0,pN,p0,pN )
+        LINE-DEST @ 2!  ( dir,pos,p0,pN )
+        2 CELLS LINE-DEST +!
+        MOVE-TO-LINE    ( row',col' )
+        CELL WIRE-SRCE +!
+    LOOP 2DROP ;
 
+: .LINE ( dir,pos,p0,pN )
+    2SWAP SWAP
+    DUP LEFT-DIR = IF
+        DROP ." LEFT ON ROW " . ." FROM " . ." TO " .
+    ELSE DUP RIGHT-DIR = IF
+        DROP ." RIGHT ON ROW " . ." FROM " SWAP . ." TO " .
+    ELSE DOWN-DIR = IF
+        ." DOWN ON COL " . ." FROM " . ." TO " .
+    ELSE
+        ." UP ON COL " . ." FROM " SWAP . ." TO " .
+    THEN THEN THEN ;
+
+: .LINES ( addr,size )
+    0 DO
+        DUP DUP            ( addr,addr )
+        4 CELLS I * ROT +  ( addr,addr+offset )
+        2@                 ( addr,dir,pos )
+        ROT DUP            ( dir,pos,addr,addr )
+        2SWAP ROT          ( addr,dir,pos,addr )
+        4 CELLS I * 2 CELLS + + ( addr,dir,pos,offset )
+        2@                 ( uddr,dir,pos,p0,pN )
+        .LINE CR
+    LOOP DROP ;
 
 PUZZLE-A-WIRE PUZZLE-A-WIRE-SIZE @ .WIRE-MOVES CR
 PUZZLE-B-WIRE PUZZLE-B-WIRE-SIZE @ .WIRE-MOVES CR
@@ -173,6 +213,9 @@ TEST-PUZZLE-B-WIRE @ WIRE-LINE           MOVE-TO-LINE .S CR
 TEST-PUZZLE-B-WIRE CELL+ @ WIRE-LINE     MOVE-TO-LINE .S CR
 TEST-PUZZLE-B-WIRE 2 CELLS + @ WIRE-LINE MOVE-TO-LINE .S CR
 TEST-PUZZLE-B-WIRE 3 CELLS + @ WIRE-LINE MOVE-TO-LINE .S CR
+2DROP
+CREATE TEST-PUZZLE-A-LINES TEST-PUZZLE-A-WIRE-SIZE @ CELLS 2* ALLOT
+CREATE TEST-PUZZLE-B-LINES TEST-PUZZLE-B-WIRE-SIZE @ CELLS 2* ALLOT
 
-
-
+TEST-PUZZLE-A-WIRE TEST-PUZZLE-A-LINES TEST-PUZZLE-A-WIRE-SIZE @ WIRE-LINES
+TEST-PUZZLE-A-LINES 4 .LINES
