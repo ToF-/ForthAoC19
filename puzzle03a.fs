@@ -135,6 +135,15 @@ CREATE LINES-B PUZZLE-B-WIRE-SIZE @ LINES ALLOT
     ELSE 2R> NIP SWAP ( row+dist,col )
     THEN THEN THEN ;
 
+4 CELLS CONSTANT LINE-SIZE
+: LINES LINE-SIZE * ;
+
+: LINE@ ( addr -- dir,pos,p0,pN )
+    >R R@ 2@ R> 2 CELLS + 2@ ;
+
+: LINE! ( dir,pos,p0,pN,addr -- )
+    >R 2SWAP R@ 2! R> 2 CELLS + 2! ;
+
 VARIABLE WIRE-SRCE
 VARIABLE LINE-DEST
 : WIRE-LINES ( srce,dest,size )
@@ -143,12 +152,9 @@ VARIABLE LINE-DEST
     0 DO                ( row,col )
         WIRE-SRCE @ @   ( row,col,wire )
         WIRE-LINE       ( dir,pos,p0,pN )
-        2OVER           ( dir,pos,p0,pN,dir,pos )
-        LINE-DEST @ 2!  ( dir,pos,p0,pN )
-        2 CELLS LINE-DEST +!
-        2DUP            ( dir,pos,p0,pN,p0,pN )
-        LINE-DEST @ 2!  ( dir,pos,p0,pN )
-        2 CELLS LINE-DEST +!
+        2OVER 2OVER     ( dir,pos,p0,pN,dir,pos,p0,pN )
+        LINE-DEST @ LINE!  ( dir,pos,p0,pN )
+        LINE-SIZE LINE-DEST +!
         MOVE-TO-LINE    ( row',col' )
         CELL WIRE-SRCE +!
     LOOP 2DROP ;
@@ -167,13 +173,8 @@ VARIABLE LINE-DEST
 
 : .LINES ( addr,size )
     0 DO
-        DUP DUP            ( addr,addr )
-        4 CELLS I * ROT +  ( addr,addr+offset )
-        2@                 ( addr,dir,pos )
-        ROT DUP            ( dir,pos,addr,addr )
-        2SWAP ROT          ( addr,dir,pos,addr )
-        4 CELLS I * 2 CELLS + + ( addr,dir,pos,offset )
-        2@                 ( uddr,dir,pos,p0,pN )
+        DUP I LINES +
+        LINE@
         .LINE CR
     LOOP DROP ;
 
