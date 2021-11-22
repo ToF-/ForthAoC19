@@ -8,10 +8,10 @@ VARIABLE HPOS
 VARIABLE VPOS
 
 HEX
-1 CONSTANT RIGHT-DIR
-2 CONSTANT LEFT-DIR
-4 CONSTANT UP-DIR
-8 CONSTANT DOWN-DIR
+1 CONSTANT LEFT-DIR
+2 CONSTANT RIGHT-DIR
+4 CONSTANT DOWN-DIR
+8 CONSTANT UP-DIR
 
 : CALIBRATE
     HPOS @ HMAX @ MAX HMAX !
@@ -74,8 +74,11 @@ VARIABLE #HLINES-A
 VARIABLE #VLINES-A
 VARIABLE #HLINES-B
 VARIABLE #VLINES-B
-CREATE HLINES-A PUZZLE-A-WIRE-SIZE @ CELLS 2* ALLOT
-CREATE HLINES-B PUZZLE-B-WIRE-SIZE @ CELLS 2* ALLOT
+
+: LINES CELLS 4 * ;
+
+CREATE LINES-A PUZZLE-A-WIRE-SIZE @ LINES ALLOT
+CREATE LINES-B PUZZLE-B-WIRE-SIZE @ LINES ALLOT
 
 : .WIRE-MOVE ( n -- )
     WIRE-MOVE
@@ -92,7 +95,47 @@ CREATE HLINES-B PUZZLE-B-WIRE-SIZE @ CELLS 2* ALLOT
 : .WIRE-MOVES ( addr,size -- )
     0 DO
         DUP I CELLS + @ .WIRE-MOVE ." ,"
-    LOOP ;
+    LOOP DROP ;
+
+
+\ converts a wire into a line from current coords
+\ e.g  103,104,R42 -- 103,R,103,104,146
+\       22,17,U100 -- 17,U,22,122
+\        5,0,L50   -- 5,L,0,-50
+\        3,9,D20   -- 9,D,3,-17
+: WIRE-LINE                    ( row,col,wire -- dir,pos,p0,pN )
+    -ROT 2>R                   ( wire -- { J=col, I=row } )
+    WIRE-MOVE                  ( dist,dir )
+    DUP LEFT-DIR = IF          ( dist,L )
+        SWAP 2R>               ( L,dist,row,col )
+        ROT OVER               ( L,row,col,dist,col )
+        SWAP - SWAP            ( L,row,col-dist,col )
+    ELSE DUP RIGHT-DIR = IF    ( dist,R )
+        SWAP 2R>               ( R,dist,row,col )
+        ROT OVER               ( R,row,col,dist,col )
+        +                      ( R,row,col,col+dist )
+    ELSE DUP DOWN-DIR = IF     ( dist,D )
+        SWAP 2R> SWAP          ( D,dist,col,row )
+        ROT OVER               ( D,col,row,dist,row )
+        SWAP - SWAP            ( D,col,row-dist,row )
+    ELSE                       ( dist,U )
+        SWAP 2R> SWAP          ( U,dist,col,row )
+        ROT OVER               ( U,col,row,dist,row )
+        +                      ( U,col,row,row+dist )
+    THEN THEN THEN ;
+
+: MOVE-TO-LINE      ( dir,c|r,p0,pn -- row',col' )
+    2>R SWAP        ( c|r,dir )
+    DUP LEFT-DIR = IF
+        DROP 2R> DROP ( row,col-dist )
+    ELSE DUP RIGHT-DIR = IF
+        DROP 2R> NIP ( row,col+dist )
+    ELSE DOWN-DIR = IF
+        2R> DROP SWAP ( row-dist,col )
+    ELSE 2R> NIP SWAP ( row+dist,col )
+    THEN THEN THEN ;
+
+
 
 PUZZLE-A-WIRE PUZZLE-A-WIRE-SIZE @ .WIRE-MOVES CR
 PUZZLE-B-WIRE PUZZLE-B-WIRE-SIZE @ .WIRE-MOVES CR
@@ -110,7 +153,6 @@ MINIMUM VMAX !
 CREATE TEST-PUZZLE-A-WIRE HERE
 8 WIRE-R 5 WIRE-U 5 WIRE-L 3 WIRE-D
 HERE SWAP - CELL / TEST-PUZZLE-A-WIRE-SIZE !
-
 VARIABLE TEST-PUZZLE-B-WIRE-SIZE
 0 HPOS ! 0 VPOS !
 CREATE TEST-PUZZLE-B-WIRE HERE
@@ -121,9 +163,16 @@ TEST-PUZZLE-A-WIRE TEST-PUZZLE-A-WIRE-SIZE @ .WIRE-MOVES CR
 TEST-PUZZLE-B-WIRE TEST-PUZZLE-B-WIRE-SIZE @ .WIRE-MOVES CR
 CR
 ." HMIN: " HMIN ? ." HMAX:" HMAX ? ." VMIN:" VMIN ? ." VMAX:" VMAX ?
-
-
-
+0 0 .S CR
+TEST-PUZZLE-A-WIRE @ WIRE-LINE           MOVE-TO-LINE .S CR
+TEST-PUZZLE-A-WIRE CELL+ @ WIRE-LINE     MOVE-TO-LINE .S CR
+TEST-PUZZLE-A-WIRE 2 CELLS + @ WIRE-LINE MOVE-TO-LINE .S CR
+TEST-PUZZLE-A-WIRE 3 CELLS + @ WIRE-LINE MOVE-TO-LINE .S CR
+2DROP 0 0
+TEST-PUZZLE-B-WIRE @ WIRE-LINE           MOVE-TO-LINE .S CR
+TEST-PUZZLE-B-WIRE CELL+ @ WIRE-LINE     MOVE-TO-LINE .S CR
+TEST-PUZZLE-B-WIRE 2 CELLS + @ WIRE-LINE MOVE-TO-LINE .S CR
+TEST-PUZZLE-B-WIRE 3 CELLS + @ WIRE-LINE MOVE-TO-LINE .S CR
 
 
 
