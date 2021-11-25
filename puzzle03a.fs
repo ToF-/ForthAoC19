@@ -209,6 +209,21 @@ VARIABLE LINE-DEST
         LOOP
     THEN DROP ;
 
+: ADD-VERT-INTERSECTIONS ( pos,p0,pN,q0,qN )
+    2OVER 2OVER          ( pos,p0,pN,q0,qN,p0,pN,q0,qN )
+    DROP  NIP            ( pos,p0,pN,q0,qN,p0,q0 )
+    > IF 2SWAP THEN      ( pos,p0,pN,q0,qN )
+    -ROT                 ( pos,p0,qN,pN,q0 )
+    2>R 2DROP 2R>        ( pos,pN,q0 )
+    2DUP                 ( pos,pN,q0,pN,q0 )
+    >= IF                ( pos,pN,q0 )
+        2DUP MAX         ( pos,pN,q0,end )
+        -ROT MIN         ( pos,end,start )
+        SWAP 1+ SWAP DO  ( pos )
+            I OVER ADD-INTERSECTION
+        LOOP
+    THEN DROP ;
+
 PUZZLE-A-WIRE PUZZLE-A-WIRE-SIZE @ .WIRE-MOVES CR
 PUZZLE-B-WIRE PUZZLE-B-WIRE-SIZE @ .WIRE-MOVES CR
 ." PUZZLE-A-WIRE-SIZE:" PUZZLE-A-WIRE-SIZE ? CR
@@ -251,6 +266,9 @@ TEST-PUZZLE-A-LINES 4 .LINES CR
 10 3 7 4 22 ADD-HORZ-INTERSECTIONS
 12 -3 27 -54 22 ADD-HORZ-INTERSECTIONS
 100 3 7 10 12 ADD-HORZ-INTERSECTIONS
+10 3 7 4 22 ADD-VERT-INTERSECTIONS
+12 -3 27 -54 22 ADD-VERT-INTERSECTIONS
+100 3 7 10 12 ADD-VERT-INTERSECTIONS
 ." INTERSECTIONS:" CR
 .INTERSECTIONS
 
