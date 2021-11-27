@@ -173,3 +173,25 @@ VARIABLE MAX-INTERSECTION
             THEN ROT             ( addr1,size1,addr2 )
         LOOP
     LOOP DROP 2DROP ;
+
+: DISTANCE ( row,col -- n )
+    ABS SWAP ABS + ;
+
+VARIABLE CLOSEST-DISTANCE
+2VARIABLE CLOSEST-INTERSECTION
+
+: FIND-CLOSEST-INTERSECTION ( -- row,col )
+   100000 CLOSEST-DISTANCE !
+   MAX-INTERSECTION @ 0 DO
+       INTERSECTIONS I CELLS + @ ?DUP IF
+           CELL>COORDS 2DUP DISTANCE DUP
+           CLOSEST-DISTANCE @ < IF
+               CLOSEST-DISTANCE !
+               CLOSEST-INTERSECTION 2!
+            ELSE
+                DROP
+                2DROP
+           THEN
+       THEN
+    LOOP ;
+
