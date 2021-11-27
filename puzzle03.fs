@@ -195,3 +195,79 @@ VARIABLE CLOSEST-DISTANCE
        THEN
     LOOP ;
 
+: ?DROP ( v,f -- v,T | F )
+    DUP 0= IF NIP THEN ;
+
+: RIGHT-INCLUDE-COORDS? ( row,col,p0,pN,pos )
+    >R 2SWAP SWAP R>    ( p0,pN,col,row,pos )
+    = IF                ( p0,pN,col )
+        TUCK            ( p0,col,pN,col )
+        >= -ROT         ( f1,p0,col )
+        SWAP -          ( f1,col-po )
+        DUP 0 >=        ( f1,col-po,f2 )
+        ROT AND         ( col-po,f )
+        ?DROP
+    ELSE DROP 2DROP FALSE THEN ;
+
+: DOWN-INCLUDE-COORDS? ( row,col,p0,pN,pos )
+    >R 2SWAP R>        ( p0,pN,row,col,pos )
+    = IF               ( p0,pN,row )
+        TUCK           ( p0,row,pN,row )
+        - DUP 0 >=     ( p0,row,pN-row,f1 )
+        >R -ROT        ( pN-row,p0,row { f1 } )
+        <= R> AND      ( pN-row, f)
+        ?DROP
+    ELSE DROP 2DROP FALSE THEN ;
+
+: LEFT-INCLUDE-COORDS? ( row,col,p0,pN,pos )
+    >R 2SWAP SWAP R>  ( p0,pN,col,row,pos )
+    = IF              ( p0,pN,col )
+        TUCK          ( p0,col,pN,col )
+        - DUP 0 >=    ( p0,col,pN-col,f1 )
+        >R -ROT       ( pN-col,p0,col { f1 } )
+        <= R> AND     ( pN-col,f )
+        ?DROP
+    ELSE DROP 2DROP FALSE THEN ;
+
+: UP-INCLUDE-COORDS? ( row,col,p0,pN,pos )
+    >R 2SWAP R>      ( p0,pN,row,col,pos )
+    = IF             ( p0,pN,row )
+        TUCK         ( p0,row,pN,row )
+        >= -ROT      ( f1,p0,row )
+        SWAP - DUP 0 >=   ( f1,row-p0,f2 )
+        ROT AND      ( row-p0, f)
+        ?DROP
+    ELSE DROP 2DROP FALSE THEN ;
+
+: INCLUDE-COORDS? ( row,col,dir,pos,p0,pN -- dist,T | F )
+    2SWAP SWAP >R      ( row,col,p0,pN,pos { dir } )
+    R@ RIGHT-DIR = IF
+        RIGHT-INCLUDE-COORDS?
+    ELSE R@ DOWN-DIR = IF
+        DOWN-INCLUDE-COORDS?
+    ELSE R@ LEFT-DIR = IF
+        LEFT-INCLUDE-COORDS?
+    ELSE UP-INCLUDE-COORDS?
+    THEN THEN THEN   ( dist,T | F { dir } )
+    R> DROP ;
+
+: INCLUDE-INTERSECTION? ( dir,pos,p0,pN -- dist,T | F )
+    MAX-INTERSECTION @ 1 DO                   ( dir,pos,p0,pN )
+        INTERSECTIONS I CELLS + @ CELL>COORDS ( dir,pos,p0,pN,row,col )
+        2OVER                                 ( dir,pos,p0,pN,row,col,p0,pN )
+        2>R                                   ( dir,pos,p0,pN,row,col { p0,pN } )
+        2>R                                   ( dir,pos,p0,pN { p0,pN,row,col } )
+        2OVER                                 ( dir,pos,p0,pN,dir,pos { p0,pN,row,col } )
+        2R>                                   ( dir,pos,p0,pN,dir,pos,row,col { p0,pN } )
+        2SWAP                                 ( dir,pos,p0,pN,row,col,dir,pos { p0,pN } )
+        2R>                                   ( dir,pos,p0,pN,row,col,dir,pos,p0,pN )
+        INCLUDE-COORDS?                       ( dir,pos,p0,pN,dist,T )
+        ?DUP IF
+            2ROT 2ROT LEAVE                   ( dist,T,dir,pos,p0,pN )
+        THEN                                  ( dir,pos,p0,pN )
+    LOOP
+    2DROP 2DROP FALSE ;
+
+: LINE>STEPS ( dir,pos,p0,pN -- dist )
+    - ABS -ROT 2DROP ;
+
