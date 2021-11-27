@@ -119,3 +119,26 @@ VARIABLE COLUMN
         CELL+ SWAP         ( srce',dest' )
     LOOP 2DROP ;
         
+: INTERSECTION? ( addr1,addr2 -- row,col,T | F )
+    OVER LINE@ 2DROP DROP           ( addr1,addr2,dir1 )
+    OVER LINE@ 2DROP DROP           ( addr1,addr2,dir1,dir2 )
+    2DUP ORTHOGONAL? IF             ( addr1,addr2,dir1,dir2 )
+        DROP VERTICAL? 0=
+        IF SWAP THEN                ( addr2,addr1 )
+        LINE@                       ( addr,H,row,c0,cN )
+        ROT >R ROT DROP             ( addr1,c0,cN { row } )
+        ROT LINE@                   ( c0,cN,V,col,r0,rN { row } )
+        ROT >R ROT DROP             ( c0,cN,r0,rN { row,col } )
+        2R@ SWAP                    ( c0,cN,r0,rN,col,row { row,col } )
+        2SWAP                       ( c0,cN,col,row,r0,rN { row,col } )
+        1+ WITHIN                   ( c0,cN,col,f1 { row,col } )
+        SWAP 2SWAP                  ( f1,col,c0,cN { row,col } )
+        1+ WITHIN AND               ( f { row,col } )
+        2R> ROT IF                  ( row,col )
+            TRUE                    ( row,col,T )
+        ELSE
+            2DROP FALSE             ( F )
+        THEN
+    ELSE
+        2DROP 2DROP FALSE
+    THEN ;
