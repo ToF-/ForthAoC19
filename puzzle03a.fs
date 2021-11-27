@@ -3,13 +3,29 @@
 2 CONSTANT LEFT-DIR
 3 CONSTANT UP-DIR
 
+20 CONSTANT COORD-BITS
+1 COORD-BITS LSHIFT 1- CONSTANT COORD-MASK
+1 COORD-BITS 1- LSHIFT CONSTANT COORD-SIGN-BIT
+COORD-MASK -1 XOR CONSTANT NEGATIVE-COORD-MASK
+
+: COORD>CELL ( coord -- n )
+    COORD-MASK AND
+    DUP COORD-SIGN-BIT AND IF
+        NEGATIVE-COORD-MASK OR
+    THEN ;
+
+: EXTRACT-COORD ( w -- w',coord )
+    COORD-BITS RSHIFT DUP COORD>CELL ;
+
 : VERTICAL? ( dir -- b )
     1 AND ;
+
 : ORTHOGONAL? ( dir1,dir2 -- b )
     VERTICAL? SWAP VERTICAL? XOR ;
 
 : WIRE, ( n,dir -- )
-    16 LSHIFT OR , ;
+    COORD-BITS LSHIFT SWAP
+    COORD-MASK AND OR , ;
 
 : WIRE-R ( n -- )
     RIGHT-DIR WIRE, ;
@@ -24,7 +40,8 @@
     UP-DIR WIRE, ;
 
 : WIRE@ ( addr -- dir,n )
-    @ DUP 16 RSHIFT SWAP 65535 AND ;
+    @ DUP COORD-BITS RSHIFT
+    SWAP COORD>CELL ;
 
 : RIGHT-WIRE>LINE ( row,col,n -- R,row,col,col+n )
     OVER +
@@ -59,11 +76,6 @@
         DOWN-WIRE>LINE
     THEN THEN THEN ;
 
-20 CONSTANT COORD-BITS
-1 COORD-BITS LSHIFT 1- CONSTANT COORD-MASK
-1 COORD-BITS 1- LSHIFT CONSTANT COORD-SIGN-BIT
-COORD-MASK -1 XOR CONSTANT NEGATIVE-COORD-MASK
-
 
 : LINE>CELL ( dir,pos,p0,pN )
     2SWAP SWAP COORD-BITS 3 * LSHIFT SWAP
@@ -71,17 +83,39 @@ COORD-MASK -1 XOR CONSTANT NEGATIVE-COORD-MASK
     -ROT SWAP COORD-MASK AND COORD-BITS LSHIFT
     SWAP COORD-MASK AND OR OR ;
 
-: COORD>CELL ( coord -- n )
-    COORD-MASK AND
-    DUP COORD-SIGN-BIT AND IF
-        NEGATIVE-COORD-MASK OR
-    THEN ;
-
-: EXTRACT-COORD ( w -- w',coord )
-    COORD-BITS RSHIFT DUP COORD>CELL ;
-
 : CELL>LINE ( w -- dir,pos,p0,pN )
     DUP COORD>CELL >R
     EXTRACT-COORD >R
     EXTRACT-COORD >R
     COORD-BITS RSHIFT R> R> R> ;
+
+: LINE@ ( addr -- dir,pos,p0,pN )
+    @ CELL>LINE ;
+
+VARIABLE ROW
+VARIABLE COLUMN
+
+: WIRE>ROW-COL! ( dir,n -- )
+    OVER RIGHT-DIR = IF
+        COLUMN +!
+    ELSE OVER DOWN-DIR = IF
+        NEGATE ROW +!
+    ELSE OVER LEFT-DIR = IF
+        NEGATE COLUMN +!
+    ELSE ROW +!
+    THEN THEN THEN DROP ;
+
+: WIRE>LINE>CELLS ( srce,dest,size --  )
+    0 ROW ! 0 COLUMN !
+    0 DO                   ( srce,dest )
+        OVER WIRE@         ( srce,dest,dir,n )
+        ROW @ COLUMN @     ( srce,dest,dir,n,row,col )
+        2SWAP WIRE>LINE    ( srce,dest,dir,pos,p0,pN )
+        LINE>CELL          ( srce,dest,w )
+        OVER !             ( srce,dest )
+        OVER WIRE@         ( srce,dest,dir,n )
+        WIRE>ROW-COL!      ( srce,dest )
+        CELL+ SWAP         ( dest',srce )
+        CELL+ SWAP         ( srce',dest' )
+    LOOP 2DROP ;
+        
