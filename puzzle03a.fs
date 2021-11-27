@@ -17,6 +17,14 @@ COORD-MASK -1 XOR CONSTANT NEGATIVE-COORD-MASK
 : EXTRACT-COORD ( w -- w',coord )
     COORD-BITS RSHIFT DUP COORD>CELL ;
 
+: COORDS>CELL ( row,col -- n )
+    COORD>CELL SWAP
+    COORD>CELL COORD-BITS LSHIFT OR ;
+
+: CELL>COORDS ( n -- row,col )
+    DUP COORD-BITS RSHIFT COORD>CELL
+    SWAP COORD>CELL ;
+
 : VERTICAL? ( dir -- b )
     1 AND ;
 
@@ -106,6 +114,7 @@ VARIABLE COLUMN
     THEN THEN THEN DROP ;
 
 : WIRE>LINE>CELLS ( srce,dest,size --  )
+    ." STORING LINES" CR ." FROM 0 0 " CR
     0 ROW ! 0 COLUMN !
     0 DO                   ( srce,dest )
         OVER WIRE@         ( srce,dest,dir,n )
@@ -115,10 +124,11 @@ VARIABLE COLUMN
         OVER !             ( srce,dest )
         OVER WIRE@         ( srce,dest,dir,n )
         WIRE>ROW-COL!      ( srce,dest )
+        ."   TO " ROW ? COLUMN ? CR
         CELL+ SWAP         ( dest',srce )
         CELL+ SWAP         ( srce',dest' )
     LOOP 2DROP ;
-        
+
 : INTERSECTION? ( addr1,addr2 -- row,col,T | F )
     OVER LINE@ 2DROP DROP           ( addr1,addr2,dir1 )
     OVER LINE@ 2DROP DROP           ( addr1,addr2,dir1,dir2 )
@@ -142,3 +152,24 @@ VARIABLE COLUMN
     ELSE
         2DROP 2DROP FALSE
     THEN ;
+
+CREATE INTERSECTIONS 100 CELLS ALLOT
+VARIABLE MAX-INTERSECTION
+
+: INTERSECTIONS! ( addr1,size1,addr2,size2 -- )
+    ." FINDING INTERSECTIONS" CR
+    0 MAX-INTERSECTION !
+    0 DO                       ( addr1,size1,addr2 )
+        OVER 0 DO                ( addr1,size1,addr2 )
+            DUP I CELLS +        ( addr1,size1,addr2,addr2+i )
+            2SWAP OVER J CELLS + ( addr2,addr2+i,addr1,size1,addr1+j )
+            -ROT 2SWAP           ( addr2,addr1,size1,addr2+i,addr1+j )
+            INTERSECTION? IF     ( addr2,addr1,size1,row,col )
+                2DUP SWAP . . CR
+                COORDS>CELL
+                INTERSECTIONS
+                MAX-INTERSECTION @ CELLS + !
+                1 MAX-INTERSECTION +!
+            THEN ROT             ( addr1,size1,addr2 )
+        LOOP
+    LOOP DROP 2DROP ;
