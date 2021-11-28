@@ -26,10 +26,29 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     CREATE 0 0 0 -1 WIRE>CELL , 
     0 0 0 ;
 
+: WIRE, ( row,col,steps -- row,col,steps )
+    -1 2OVER 2OVER           ( r,c,s,f,r,c,s,f )
+    WIRE>CELL , DROP ;       ( row,col',steps' )
+    
 : WIRE-R, ( row,col,steps,dist -- row',col',steps' )
     DUP -ROT +               ( row,col,dist,steps' )
     -ROT + SWAP              ( row,col',steps' )
-    -1 2OVER 2OVER           ( r,c,s,f,r,c,s,f )
-    WIRE>CELL , DROP ;       ( row',col',steps' )
+    WIRE, ;                  ( row,col',steps' )
+
+: WIRE-U, ( row,col,steps,dist -- row',col',steps' )
+    DUP -ROT +               ( row,col,dist,steps' )
+    >R ROT + SWAP R>         ( row',col,steps' )
+    WIRE, ;                  ( row',col,steps' )
+
+: WIRE-L, ( row,col,steps,dist -- row',col',steps' )
+    DUP -ROT +               ( row,col,dist,steps' )
+    >R - R>                  ( row,col',steps' )
+    WIRE, ;                  ( row,col',steps' )
+
+: WIRE-D, ( row,col,steps,dist -- row',col',steps' )
+    DUP -ROT +               ( row,col,dist,steps' )
+    >R NEGATE ROT + SWAP R>  ( row',col,steps' )
+    WIRE, ;                  ( row',col,steps' )
+
     
     
