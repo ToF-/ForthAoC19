@@ -50,5 +50,11 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     >R NEGATE ROT + SWAP R>  ( row',col,steps' )
     WIRE, ;                  ( row',col,steps' )
 
+: VERTICAL? ( row,col,row',col' -- f )
+    ROT = -ROT <> AND ;
+
+: ORTHOGONAL? ( r0,c0,rn,cn,r0',c0,rn',cn' )
+    VERTICAL? >R VERTICAL? R> <> ;
+
     
     

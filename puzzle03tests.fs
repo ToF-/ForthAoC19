@@ -27,7 +27,14 @@ T{ ." WIRE- words, compile a wire to the right, with current steps, no intersect
     CIRCUIT-B 3 CELLS + @ CELL>WIRE -1 ?S 69 ?S 32 ?S 17 ?S
     CIRCUIT-B 4 CELLS + @ CELL>WIRE -1 ?S 106 ?S 32 ?S -20 ?S
 }T
-HEX CIRCUIT-B 5 CELLS DUMP
 
+T{ ." VERTICAL? says if a line is vertical or not" CR
+    0 0 100 0 VERTICAL? TRUE ?S
+    10 23 10 47 VERTICAL? FALSE ?S
+}T
+
+T{ ." ORTHOGONAL? says if two lines are orthogonal" CR
+    0 0 100 0  0 0 0 50 ORTHOGONAL? TRUE ?S
+    0 0 0 100  0 0 0 50 ORTHOGONAL? FALSE ?S
 BYE
 
