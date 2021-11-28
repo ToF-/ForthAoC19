@@ -22,3 +22,14 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
 : CELL>WIRE ( w -- row,col,steps,dist? )
     |WORD>> |WORD>> |WORD>> |WORD>> DROP ;
 
+: WIRES ( 'name' -- 0,0,0 )
+    CREATE 0 0 0 -1 WIRE>CELL , 
+    0 0 0 ;
+
+: WIRE-R, ( row,col,steps,dist -- row',col',steps' )
+    DUP -ROT +               ( row,col,dist,steps' )
+    -ROT + SWAP              ( row,col',steps' )
+    -1 2OVER 2OVER           ( r,c,s,f,r,c,s,f )
+    WIRE>CELL , DROP ;       ( row',col',steps' )
+    
+    
