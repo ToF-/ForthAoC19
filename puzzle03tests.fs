@@ -12,7 +12,7 @@ T{ ." WIRE>CELL converts row col steps and intersection distance to a cell" CR
 T{ ." WIRES creates a new list of wires with a first point at 0,0" CR
     WIRES CIRCUIT-A
     CIRCUIT-A @ CELL>WIRE -1 ?S 0 ?S 0 ?S 0 ?S
-    2DROP DROP
+    END-WIRES
 }T
 
 T{ ." WIRE- words, compile a wire to the right, with current steps, no intersection" CR
@@ -21,7 +21,7 @@ T{ ." WIRE- words, compile a wire to the right, with current steps, no intersect
     17 WIRE-U,
     10 WIRE-L,
     37 WIRE-D,
-    106 ?S 32 ?S -20 ?S
+    END-WIRES
     CIRCUIT-B 1 CELLS + @ CELL>WIRE -1 ?S 42 ?S 42 ?S 0 ?S
     CIRCUIT-B 2 CELLS + @ CELL>WIRE -1 ?S 59 ?S 42 ?S 17 ?S
     CIRCUIT-B 3 CELLS + @ CELL>WIRE -1 ?S 69 ?S 32 ?S 17 ?S
@@ -36,5 +36,16 @@ T{ ." VERTICAL? says if a line is vertical or not" CR
 T{ ." ORTHOGONAL? says if two lines are orthogonal" CR
     0 0 100 0  0 0 0 50 ORTHOGONAL? TRUE ?S
     0 0 0 100  0 0 0 50 ORTHOGONAL? FALSE ?S
+}T
+
+T{ ." INTERSECT! stores an intersection at a given step of a wire" CR
+    WIRES CIRCUIT-C
+    8 WIRE-R, 5 WIRE-U, 5 WIRE-L, 3 WIRE-D,
+    END-WIRES
+    23 CIRCUIT-C 1 CELLS + INTERSECT! 
+    CIRCUIT-C 1 CELLS + @ CELL>WIRE 23 ?S 8 ?S 8 ?S 0 ?S
+}T
+    
+
 BYE
 

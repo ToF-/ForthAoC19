@@ -26,6 +26,9 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     CREATE 0 0 0 -1 WIRE>CELL , 
     0 0 0 ;
 
+: END-WIRES ( row,col,steps -- )
+    DROP 2DROP ;
+
 : WIRE, ( row,col,steps -- row,col,steps )
     -1 2OVER 2OVER           ( r,c,s,f,r,c,s,f )
     WIRE>CELL , DROP ;       ( row,col',steps' )
@@ -56,5 +59,8 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
 : ORTHOGONAL? ( r0,c0,rn,cn,r0',c0,rn',cn' )
     VERTICAL? >R VERTICAL? R> <> ;
 
+: INTERSECT! ( steps,addr )
+    SWAP >R
+    DUP @ CELL>WIRE DROP R> WIRE>CELL SWAP ! ;
     
     
