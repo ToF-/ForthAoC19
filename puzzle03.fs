@@ -20,6 +20,12 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     DUP WORD-MASK AND WORD>CELL
     SWAP WORD-BITS RSHIFT ;
 
+: INTERSECTION>CELL ( row,col -- w )
+    0 <<WORD| <<WORD| ;
+
+: CELL>INTERSECTION ( w -- row,col )
+    |WORD>> |WORD>> DROP ;
+
 : WIRE>CELL ( row,col,steps,dist? -- w )
       0 <<WORD| <<WORD| <<WORD| <<WORD| ;
 
@@ -136,19 +142,41 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     DISTANCES            \ addrB,dy,dx
     ROT @INTERSECT!     ;
 
+500 CONSTANT MAX-INTERSECTIONS
+CREATE INTERSECTIONS MAX-INTERSECTIONS ALLOT
+VARIABLE #INTERSECTIONS
+
+: INTERSECTION! ( row,col -- )
+    2DUP * IF
+        INTERSECTION>CELL
+        INTERSECTIONS #INTERSECTIONS @ CELLS + !
+        1 #INTERSECTIONS +!
+    ELSE
+        2DROP
+    THEN ;
+
 : INTERSECTIONS! ( addrA,addrB -- )
+    0 #INTERSECTIONS !
     CELL+ SWAP CELL+ SWAP
     SWAP BEGIN                                \ addrB,addrA
-        OVER
-        OVER @ CELL>WIRE END-WIRE? 0= WHILE   \ addrB,addrA,addrB
-        BEGIN                                 
-            DUP @ CELL>WIRE END-WIRE? 0= WHILE
-            2DUP @INTERSECT? IF               \ addrB,addrA,addrB,y,x,T
+        DUP @ CELL>WIRE END-WIRE? 0= WHILE    \ addrB,addrA
+        OVER                                  \ addrB,addrA,addrB
+        BEGIN
+            DUP @ CELL>WIRE END-WIRE? 0= WHILE \ addrB,addrA,addrB
+            2DUP @INTERSECT? IF                \ addrB,addrA,addrB,y,x,T
+                2DUP INTERSECTION!
                 2OVER @INTERSECTS!            \ addrB,addrA,addrB
             THEN
             CELL+                             \ addrB,addrA,addrB+1
         REPEAT DROP                           \ addrB,addrA
-        CELL+ OVER                            \ addrB,addrA+1
+        CELL+                                 \ addrB,addrA+1
     REPEAT 2DROP ;
 
-
+: FIND-CLOSEST ( -- row,col )
+    9999 9999 +                         \ minimum
+    #INTERSECTIONS @ 0 DO
+        INTERSECTIONS I CELLS + @        \ minimum,intersection
+        CELL>INTERSECTION ABS SWAP ABS + \ minimum,distance
+        OVER OVER > IF NIP ELSE DROP THEN \ minimum'
+    LOOP ;
+        
