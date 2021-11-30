@@ -124,7 +124,7 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     DROP -ROT 2DROP              \ dist,addr,steps
     ROT + SWAP                   \ steps',addr
     INTERSECT! ;
-    
+
 : @INTERSECTS! ( y,x,addrA,addrB )
     2SWAP 2>R SWAP        \ addrB,addrA  { y,x }
     DUP @WIRE>LINE       \ addrB,addrA,py,px,qy,qx
@@ -135,3 +135,20 @@ WORD-MASK -1 XOR CONSTANT NEGATIVE-CELL-MASK
     2R> 2ROT 2ROT        \ addrB,x,y,ry,rx,sy,sx
     DISTANCES            \ addrB,dy,dx
     ROT @INTERSECT!     ;
+
+: INTERSECTIONS! ( addrA,addrB -- )
+    CELL+ SWAP CELL+ SWAP
+    SWAP BEGIN                                \ addrB,addrA
+        OVER
+        OVER @ CELL>WIRE END-WIRE? 0= WHILE   \ addrB,addrA,addrB
+        BEGIN                                 
+            DUP @ CELL>WIRE END-WIRE? 0= WHILE
+            2DUP @INTERSECT? IF               \ addrB,addrA,addrB,y,x,T
+                2OVER @INTERSECTS!            \ addrB,addrA,addrB
+            THEN
+            CELL+                             \ addrB,addrA,addrB+1
+        REPEAT DROP                           \ addrB,addrA
+        CELL+ OVER                            \ addrB,addrA+1
+    REPEAT 2DROP ;
+
+
